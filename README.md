@@ -5,10 +5,15 @@ the English model in `model/eng.traineddata`, and prints the text in the termina
 
 ## Setup
 
-You need Python 3.10 or newer and Tesseract. Run the commands below from the
+You need Python 3.10 or newer, Anaconda/Miniconda, and Tesseract. Run the commands below from the
 project folder.
 
-### Mac
+```sh
+conda env create -f env.yaml
+conda activate tesseract-env
+```
+
+<!-- ### Mac
 
 Install Tesseract with Homebrew:
 
@@ -22,37 +27,24 @@ Create a virtual environment and install the Python packages:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-```
+``` -->
 
-### Windows
-
-Install Tesseract using the Windows section of the
-[installation guide](https://tesseract-ocr.github.io/tessdoc/Installation.html).
-Add the folder containing `tesseract.exe` to your PATH, then open a new
-Command Prompt.
-
-In Command Prompt, create a virtual environment and install the Python packages:
-
-```bat
-py -m venv .venv
-.venv\Scripts\activate.bat
-python -m pip install -r requirements.txt
-```
 
 ### Check the installation
 
-On either system, check that Tesseract is available:
+On either system, once (tesseract-env) is seen at the start of the command line prompt, 
+check that Tesseract is available:
 
 ```text
 tesseract --version
 ```
 
-`requirements.txt` installs Pillow for opening images and pytesseract for calling
-Tesseract from Python. Tesseract itself needs the separate installation above.
+<!-- `requirements.txt` installs Pillow for opening images and pytesseract for calling
+Tesseract from Python. Tesseract itself needs the separate installation above. -->
 
 ## Run one image
 
-With the virtual environment activated, run this on either system:
+With the conda environment activated, run this on either system:
 
 ```sh
 python ocr_single.py data/dataset/img0002.png
