@@ -1,10 +1,11 @@
 import argparse
 import re
 import shutil
-from pathlib import Path
-
-from PIL import Image, ImageFilter, ImageOps
 import pytesseract
+
+from pathlib import Path
+from PIL import Image, ImageFilter, ImageOps
+
 
 
 MODEL_DIR = Path(__file__).resolve().parent / "model"
@@ -13,7 +14,12 @@ NON_LETTER_EDGES = re.compile(r"^[^A-Za-z]+|[^A-Za-z]+$")
 
 def recognize_text(image_path):
     with Image.open(image_path) as image:
-        grayscale = ImageOps.grayscale(image)
+        return recognize_image(image)
+
+
+def recognize_image(image):
+    # Preprocess an already opened image and run OCR on it
+    grayscale = ImageOps.grayscale(image)
 
     # Remove salt and pepper noise (using 3x3 median filter)
     denoised = grayscale.filter(ImageFilter.MedianFilter(3))
