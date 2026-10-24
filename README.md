@@ -1,34 +1,17 @@
 # CSC611M parallel OCR pipeline
 
-For now, this runs OCR on one image. It converts the image to grayscale, uses
-the English model in `model/eng.traineddata`, and prints the text in the terminal.
+For now, this runs OCR on one image. It converts the image to grayscale, removes
+noise with a 3x3 median filter, uses the English model in `model/eng.traineddata`,
+and prints the text in the terminal.
 
 ## Setup
 
-You need Python 3.10 or newer, Anaconda/Miniconda, and Tesseract. Run the commands below from the
-project folder.
+You need Python 3.10 or newer, Anaconda/Miniconda, and Tesseract. Run the commands below from the project folder.
 
 ```sh
 conda env create -f env.yaml
 conda activate tesseract-env
 ```
-
-<!-- ### Mac
-
-Install Tesseract with Homebrew:
-
-```sh
-brew install tesseract
-```
-
-Create a virtual environment and install the Python packages:
-
-```sh
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-``` -->
-
 
 ### Check the installation
 
@@ -39,9 +22,6 @@ check that Tesseract is available:
 tesseract --version
 ```
 
-<!-- `requirements.txt` installs Pillow for opening images and pytesseract for calling
-Tesseract from Python. Tesseract itself needs the separate installation above. -->
-
 ## Run one image
 
 With the conda environment activated, run this on either system:
@@ -50,18 +30,17 @@ With the conda environment activated, run this on either system:
 python ocr_single.py data/dataset/img0002.png
 ```
 
-The word in this image is `grape`. During the Mac test, the output was `- grape`,
-so it picked up the word but added a hyphen. The images have noise, so the output
-can have extra characters or wrong letters.
+The word in this image is `grape`, and the script prints `grape`. After OCR, it
+removes non-letter characters at the start and end of the text, such as a stray
+`:` or `-`. The images have noise, so some outputs can still have wrong letters.
 
 Change the image path to try another image. If the path has spaces, put it in
 quotes. `labels.txt` lists the expected words for checking the output. The script
 does not read the labels to get its answer.
 
-The script uses `--psm 8`, which tells Tesseract to treat the image as one word.
-
-Tested on Mac with Python 3.14.4, Tesseract 5.5.3, Pillow 12.3.0, and pytesseract
-0.3.13. The Windows setup still needs testing.
+The script uses `--psm 3`, Tesseract's default automatic page layout. On the
+100-image dataset, the median filter with `--psm 3` gave more exact matches than
+`--psm 8`, which treats the image as one word.
 
 ## Next steps
 
