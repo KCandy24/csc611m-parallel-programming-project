@@ -1,27 +1,34 @@
-# Run OCR on one image
-
 import argparse
-from pathlib import Path
+import re
 import shutil
+from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter, ImageOps
 import pytesseract
 
 
 MODEL_DIR = Path(__file__).resolve().parent / "model"
+NON_LETTER_EDGES = re.compile(r"^[^A-Za-z]+|[^A-Za-z]+$")
 
 
-def recognize_text(image_path: Path) -> str:
+def recognize_text(image_path):
     with Image.open(image_path) as image:
         grayscale = ImageOps.grayscale(image)
 
-    # Treat the image as one word
-    return pytesseract.image_to_string(
-        grayscale,
+    # Remove salt and pepper noise (using 3x3 median filter)
+    denoised = grayscale.filter(ImageFilter.MedianFilter(3))
+
+    text = pytesseract.image_to_string(
+        denoised,
         lang="eng",
-        config=f'--tessdata-dir "{MODEL_DIR}" --psm 8',
+        # --psm 3 analyzes the layout and crops a tight text line around the word
+        # --psm 8 skips that step, so the text region stretches to include specks
+        config=f'--tessdata-dir "{MODEL_DIR}" --psm 3',
         timeout=30,
-    ).strip()
+    )
+
+    # Remove non-letter characters at the start and end only
+    return NON_LETTER_EDGES.sub("", text)
 
 
 def main():
@@ -31,8 +38,10 @@ def main():
 
     if not args.image.is_file():
         parser.error(f"Image file not found: {args.image}")
+
     if not (MODEL_DIR / "eng.traineddata").is_file():
         parser.error(f"English model not found in: {MODEL_DIR}")
+
     if shutil.which("tesseract") is None:
         parser.exit(1, "Tesseract is missing from PATH. See README.md for setup.\n")
 
