@@ -8,7 +8,6 @@ from ocr_single import recognize_image
 
 PROJECT_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = PROJECT_DIR / "config.txt"
-IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 # Put on the queue by the loader to tell a worker there are no more images
 STOP = None
@@ -46,13 +45,10 @@ def read_config(config_path):
 
 
 
-# Load images, share a queue, and run one OCR worker
-def loader(image_dir, image_queue):
-    # Load every image in image_dir and put it on the queue
-    image_paths = sorted(
-        path for path in image_dir.iterdir()
-        if path.suffix.lower() in IMAGE_EXTENSIONS
-    )
+# Load images, share a queue, and run n OCR workers
+def loader(image_dir, image_queue, n_workers):
+    # Load every PNG image in image_dir and put it on the queue
+    image_paths = sorted(image_dir.glob("*.png"))
     try:
         for image_id, path in enumerate(image_paths, start=1):
             with Image.open(path) as image:
@@ -60,41 +56,49 @@ def loader(image_dir, image_queue):
                 image.load()  
             image_queue.put((image_id, path.name, image))
     finally:
-        # Always send STOP, even if loading fails, so the worker never waits forever
-        image_queue.put(STOP)
+        # Send one STOP per worker, even if loading fails, so no worker waits forever
+        # Every image is taken before any STOP
+        for _ in range(n_workers):
+            image_queue.put(STOP)
 
 
 def ocr_worker(image_queue):
-    # Take images from the queue and run OCR until STOP arrives.
+    # Take images from the queue and run OCR until STOP arrives
+    worker_name = threading.current_thread().name
     while True:
         item = image_queue.get()
         if item is STOP:
             break
         image_id, filename, image = item
         text = recognize_image(image)
-        print(f"{image_id}\t{filename}\t{text}")
+        print(f"{image_id}\t{filename}\t{text}\t{worker_name}")
 
 
 def main():
     image_dir, n_workers = read_config(CONFIG_PATH)
     print(f"image_dir={image_dir}")
-    print(f"n_workers={n_workers} (stage 2 still uses 1 worker)")
+    print(f"n_workers={n_workers}")
 
     image_queue = queue.Queue()
 
     loader_thread = threading.Thread(
-        target=loader, args=(image_dir, image_queue), name="loader"
+        target=loader, args=(image_dir, image_queue, n_workers), name="loader"
     )
-    worker_thread = threading.Thread(
-        target=ocr_worker, args=(image_queue,), name="ocr-worker-1"
-    )
+    worker_threads = [
+        threading.Thread(
+            target=ocr_worker, args=(image_queue,), name=f"ocr-worker-{number}"
+        )
+        for number in range(1, n_workers + 1)
+    ]
 
     loader_thread.start()
-    worker_thread.start()
+    for worker_thread in worker_threads:
+        worker_thread.start()
 
-    # Wait for both threads to finish before the program ends
+    # Wait for every thread to finish before the program ends
     loader_thread.join()
-    worker_thread.join()
+    for worker_thread in worker_threads:
+        worker_thread.join()
     print("All images processed.")
 
 
