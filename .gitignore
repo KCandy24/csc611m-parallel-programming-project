@@ -8,3 +8,5 @@ venv/
 .venv/
 .conda/
 conda-meta/
+
+*.sh
