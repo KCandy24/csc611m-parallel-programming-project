@@ -10,3 +10,6 @@ venv/
 conda-meta/
 
 *.sh
+
+# Pipeline output, created on each run
+data/results/

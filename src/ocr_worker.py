@@ -21,12 +21,13 @@ class OCR_Worker(Process):
 
     def recognize_image(self, image):
         # Preprocess an already opened image and run OCR on it
+        # Start timing here, so the processing time includes preprocessing
+        start_time = time.perf_counter_ns()
+
         grayscale = ImageOps.grayscale(image)
 
         # Remove salt and pepper noise (using 3x3 median filter)
         denoised = grayscale.filter(ImageFilter.MedianFilter(3))
-
-        start_time = time.perf_counter_ns()
 
         text = pytesseract.image_to_string(
             denoised,
@@ -39,8 +40,8 @@ class OCR_Worker(Process):
         elapsed_ns = time.perf_counter_ns() - start_time
 
         # Remove non-letter characters at the start and end only
-        ## Also return the time in miliseconds
-        return NON_LETTER_EDGES.sub("", text), elapsed_ns / 100
+        ## Also return the time in milliseconds (1 ms = 1,000,000 ns)
+        return NON_LETTER_EDGES.sub("", text), elapsed_ns / 1_000_000
     
     def run(self):
         print(f"Worker {self.worker_id} started.")

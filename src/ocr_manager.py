@@ -22,7 +22,7 @@ class OCR_Manager():
         
         self.writer = CSV_Writer(
             result_queue= self.result_queue,
-            file_name= f"{n_workers}_threads_results"
+            file_name= "ocr_results"
         )
 
 

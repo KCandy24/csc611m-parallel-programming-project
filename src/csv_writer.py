@@ -13,7 +13,11 @@ class CSV_Writer(Process):
     def run(self):
         print(f"Writer started.")
 
-        with open(self.csv_path, mode="a", newline="", encoding="utf-8") as f:
+        # Create data/results if it does not exist yet
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+        # "w" replaces the file from the last run instead of adding to it
+        with open(self.csv_path, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
 
             while True:
