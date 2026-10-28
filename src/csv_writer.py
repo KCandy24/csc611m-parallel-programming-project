@@ -19,6 +19,7 @@ class CSV_Writer(Process):
         # "w" replaces the file from the last run instead of adding to it
         with open(self.csv_path, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
+            writer.writerow(["id", "filename", "text", "worker", "time_ms"])
 
             while True:
                 line = self.result_queue.get()

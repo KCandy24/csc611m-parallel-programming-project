@@ -14,7 +14,9 @@ from PIL import ImageFilter, ImageOps
 class OCR_Worker(Process):
 
     def __init__(self, worker_id, image_queue, result_queue):
-        super().__init__()
+        # Name the process after worker_id, so workers are 1 to n instead of
+        # Python's automatic process number
+        super().__init__(name=f"OCR_Worker-{worker_id}")
         self.worker_id = worker_id
         self.image_queue = image_queue
         self.result_queue = result_queue
@@ -63,4 +65,5 @@ class OCR_Worker(Process):
                 continue
 
             print(f"{image_id},{filename},{text},{worker_name},{time:.4f}ms")
-            self.result_queue.put([image_id, filename, text, worker_name, f"{time:.4f}ms"])
+            # Save time as a number, so it can be summed and averaged
+            self.result_queue.put([image_id, filename, text, worker_name, round(time, 4)])
