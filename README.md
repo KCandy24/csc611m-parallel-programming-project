@@ -1,8 +1,10 @@
 # CSC611M parallel OCR pipeline
 
-For now, this runs OCR on one image. It converts the image to grayscale, removes
-noise with a 3x3 median filter, uses the English model in `model/eng.traineddata`,
-and prints the text in the terminal.
+One loader process puts the images from `image_dir` on a shared queue. `n_workers`
+OCR worker processes take images from the queue. Each worker converts the image
+to grayscale, removes noise with a 3x3 median filter, and runs OCR with the
+English model in `model/eng.traineddata`. One writer process saves the results
+to a CSV in `data/results/`.
 
 ## Setup
 
@@ -22,27 +24,31 @@ check that Tesseract is available:
 tesseract --version
 ```
 
-## Run one image
+## Run the pipeline
+
+Set the image folder and the number of OCR workers in `config.txt`:
+
+```text
+image_dir=data/dataset
+n_workers=2
+```
 
 With the conda environment activated, run this on either system:
 
 ```sh
-python ocr_single.py data/dataset/img0002.png
+python main.py
 ```
 
-The word in this image is `grape`, and the script prints `grape`. After OCR, it
-removes non-letter characters at the start and end of the text, such as a stray
-`:` or `-`. The images have noise, so some outputs can still have wrong letters.
+After OCR, each worker removes non-letter characters at the start and end of the
+text, such as a stray `:` or `-`. The images have noise, so some outputs can still
+have wrong letters. `labels.txt` lists the expected words for checking the output.
+The pipeline does not read the labels to get its answer.
 
-Change the image path to try another image. If the path has spaces, put it in
-quotes. `labels.txt` lists the expected words for checking the output. The script
-does not read the labels to get its answer.
-
-The script uses `--psm 3`, Tesseract's default automatic page layout. On the
+The workers use `--psm 3`, Tesseract's default automatic page layout. On the
 100-image dataset, the median filter with `--psm 3` gave more exact matches than
 `--psm 8`, which treats the image as one word.
 
 ## Next steps
 
-Add the loader, shared queue, multiple OCR workers, and CSV output. After that,
-test different worker counts and prepare the slides.
+Make the pipeline exit cleanly, fix the CSV output, test different worker counts,
+and prepare the slides.
