@@ -3,6 +3,7 @@ from multiprocessing import Queue
 from src.ocr_worker import OCR_Worker
 from src.loader import Loader
 from src.csv_writer import CSV_Writer
+from src.shared import STOP
 
 class OCR_Manager():
 
@@ -46,6 +47,11 @@ class OCR_Manager():
 
         for worker in worker_processes:
             worker.join()
+            if worker.exitcode != 0:
+                print(f"{worker.name} stopped with exit code {worker.exitcode}")
+
+        # All workers are done, so no more results will come. Tell the writer to stop.
+        self.result_queue.put(STOP)
 
         self.writer.join()
 

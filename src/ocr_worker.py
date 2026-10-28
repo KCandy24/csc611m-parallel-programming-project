@@ -54,7 +54,12 @@ class OCR_Worker(Process):
 
             image_id, filename, image = item
 
-            text, time = self.recognize_image(image)
+            try:
+                text, time = self.recognize_image(image)
+            except Exception as error:
+                # Report the failed image and move on, so this worker still reaches its STOP
+                print(f"{worker_name} failed on {filename}: {error}")
+                continue
 
             print(f"{image_id},{filename},{text},{worker_name},{time:.4f}ms")
             self.result_queue.put([image_id, filename, text, worker_name, f"{time:.4f}ms"])

@@ -13,12 +13,18 @@ class Loader(Process):
     def run(self):
         print(f"Loader started.")
 
-        for image_id, path in enumerate(self.image_paths, start=1):
-            
-            with Image.open(path) as image:
-                # read the pixels now, so the file can close
-                image.load()  
-            self.image_queue.put((image_id, path.name, image))
-
-        for _ in range(self.n_workers):
-            self.image_queue.put(STOP)
+        try:
+            for image_id, path in enumerate(self.image_paths, start=1):
+                try:
+                    with Image.open(path) as image:
+                        # read the pixels now, so the file can close
+                        image.load()
+                except OSError as error:
+                    # Skip an unreadable image and keep loading the rest
+                    print(f"Loader skipped {path.name}: {error}")
+                    continue
+                self.image_queue.put((image_id, path.name, image))
+        finally:
+            # Send one STOP per worker, even if loading fails, so no worker waits forever
+            for _ in range(self.n_workers):
+                self.image_queue.put(STOP)
