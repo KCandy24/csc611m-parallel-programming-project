@@ -1,0 +1,2 @@
+image_dir=data/dataset
+n_workers=2
