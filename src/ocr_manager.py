@@ -4,16 +4,16 @@ import time
 from src.ocr_worker import OCR_Worker
 from src.loader import Loader
 from src.csv_writer import CSV_Writer
-from src.shared import STOP
+from src.shared import STOP, RESULTS_DIR
 
 class OCR_Manager():
 
-    def __init__(self, image_dir, n_workers):
+    def __init__(self, image_dir, n_workers, file_name, results_dir=RESULTS_DIR):
         self.n_workers = n_workers
 
         self.image_queue = Queue()
         self.result_queue = Queue()
-        self.file_name = f"ocr_results_{n_workers}_threads"
+        self.file_name = file_name
 
         
         self.loader = Loader(
@@ -24,7 +24,8 @@ class OCR_Manager():
         
         self.writer = CSV_Writer(
             result_queue= self.result_queue,
-            file_name= self.file_name
+            file_name= self.file_name,
+            results_dir= results_dir
         )
 
 

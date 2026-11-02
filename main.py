@@ -1,26 +1,19 @@
 from src.ocr_manager import OCR_Manager
-from src.shared import CONFIG_PATH
+from src.shared import CONFIG_PATH, RESULTS_DIR
 from util.read_config import read_config
-from util.report import generate_report
 
 
 def main():
     image_dir, n_workers = read_config(CONFIG_PATH)
-    labels = image_dir / "labels.csv"
     print(f"image_dir={image_dir}")
     print(f"n_workers={n_workers}")
 
-    mt_manager = OCR_Manager(image_dir= image_dir, n_workers= n_workers)
-    mt_file, mt_time = mt_manager.dispatch_workers()
+    # The spec asks for a single "ocr_results.csv"
+    manager = OCR_Manager(image_dir= image_dir, n_workers= n_workers, file_name= "ocr_results")
+    file_name, elapsed_ms = manager.dispatch_workers()
 
-    st_manager = OCR_Manager(image_dir= image_dir, n_workers= 1)
-    st_file, st_time = st_manager.dispatch_workers()
-
-    generate_report(
-                    st_time= st_time, mt_time= mt_time,
-                    n_workers= n_workers, 
-                    st_file= st_file, mt_file= mt_file, 
-                    data_dir= image_dir)
+    print(f"Total time: {elapsed_ms:.4f} ms")
+    print(f"Results saved to: {RESULTS_DIR / (file_name + '.csv')}")
 
 if __name__ == "__main__":
     main()
