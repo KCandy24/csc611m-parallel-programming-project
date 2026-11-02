@@ -1,17 +1,19 @@
 from multiprocessing import Queue
+import time
 
 from src.ocr_worker import OCR_Worker
 from src.loader import Loader
 from src.csv_writer import CSV_Writer
-from src.shared import STOP
+from src.shared import STOP, RESULTS_DIR
 
 class OCR_Manager():
 
-    def __init__(self, image_dir, n_workers):
+    def __init__(self, image_dir, n_workers, file_name, results_dir=RESULTS_DIR):
         self.n_workers = n_workers
 
         self.image_queue = Queue()
         self.result_queue = Queue()
+        self.file_name = file_name
 
         
         self.loader = Loader(
@@ -22,11 +24,14 @@ class OCR_Manager():
         
         self.writer = CSV_Writer(
             result_queue= self.result_queue,
-            file_name= "ocr_results"
+            file_name= self.file_name,
+            results_dir= results_dir
         )
 
 
     def dispatch_workers(self):
+
+        start_time = time.perf_counter_ns()
 
         worker_processes = []
 
@@ -56,6 +61,10 @@ class OCR_Manager():
         self.writer.join()
 
         self.loader.join()
+
+        elapsed_ns = time.perf_counter_ns() - start_time
+        return self.file_name, elapsed_ns / 1_000_000
+
 
 
         

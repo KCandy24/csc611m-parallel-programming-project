@@ -39,6 +39,21 @@ With the conda environment activated, run this on either system:
 python main.py
 ```
 
+This writes `data/results/ocr_results.csv`.
+
+## Benchmark
+
+To compare worker counts, run:
+
+```sh
+python benchmark.py
+```
+
+This runs the pipeline with 1 worker up to the number of CPU cores, then writes
+`data/results/benchmark_report.html` with the time, speedup, efficiency, and
+accuracy for each count. The 1-worker run is the baseline for speedup. The CSV
+of each run is saved in `data/results/benchmark/`.
+
 After OCR, each worker removes non-letter characters at the start and end of the
 text, such as a stray `:` or `-`. The images have noise, so some outputs can still
 have wrong letters. `labels.txt` lists the expected words for checking the output.
@@ -50,5 +65,5 @@ The workers use `--psm 3`, Tesseract's default automatic page layout. On the
 
 ## Next steps
 
-Make the pipeline exit cleanly, fix the CSV output, test different worker counts,
-and prepare the slides.
+Decide on the synchronization changes, run the final benchmark, and prepare the
+slides.

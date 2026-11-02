@@ -1,13 +1,10 @@
-#  
 # OCR Worker class: This handles one process of OCR
-# 
 
 from src.shared import MODEL_DIR, NON_LETTER_EDGES, STOP
 
 import pytesseract
 import time
 
-import multiprocessing
 from multiprocessing import Process
 from PIL import ImageFilter, ImageOps
 
@@ -42,12 +39,12 @@ class OCR_Worker(Process):
         elapsed_ns = time.perf_counter_ns() - start_time
 
         # Remove non-letter characters at the start and end only
-        ## Also return the time in milliseconds (1 ms = 1,000,000 ns)
+        # Also return the time in milliseconds (1 ms = 1,000,000 ns)
         return NON_LETTER_EDGES.sub("", text), elapsed_ns / 1_000_000
     
     def run(self):
         print(f"Worker {self.worker_id} started.")
-        worker_name = multiprocessing.current_process().name
+        worker_name = self.name
 
         while True:
             item = self.image_queue.get()
@@ -58,12 +55,12 @@ class OCR_Worker(Process):
             image_id, filename, image = item
 
             try:
-                text, time = self.recognize_image(image)
+                text, elapsed_ms = self.recognize_image(image)
             except Exception as error:
                 # Report the failed image and move on, so this worker still reaches its STOP
                 print(f"{worker_name} failed on {filename}: {error}")
                 continue
 
-            print(f"{image_id},{filename},{text},{worker_name},{time:.4f}ms")
+            print(f"{image_id},{filename},{text},{worker_name},{elapsed_ms:.4f}ms")
             # Save time as a number, so it can be summed and averaged
-            self.result_queue.put([image_id, filename, text, worker_name, round(time, 4)])
+            self.result_queue.put([image_id, filename, text, worker_name, round(elapsed_ms, 4)])
